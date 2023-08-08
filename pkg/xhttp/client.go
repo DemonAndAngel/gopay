@@ -13,6 +13,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"os"
 	"sort"
 	"strings"
 	"time"
@@ -39,6 +40,18 @@ type Client struct {
 	err              error
 }
 
+func GetHttpProxy() func(*http.Request) (*url.URL, error) {
+	proxyStr := os.Getenv("MY_HTTP_PROXY")
+	var proxy func(*http.Request) (*url.URL, error)
+	if proxyStr != "" {
+		p, err := url.Parse(proxyStr)
+		if err == nil {
+			proxy = http.ProxyURL(p)
+		}
+	}
+	return proxy
+}
+
 // NewClient , default tls.Config{InsecureSkipVerify: true}
 func NewClient() (client *Client) {
 	client = &Client{
@@ -47,7 +60,7 @@ func NewClient() (client *Client) {
 			Transport: &http.Transport{
 				TLSClientConfig:   &tls.Config{InsecureSkipVerify: true},
 				DisableKeepAlives: true,
-				Proxy:             http.ProxyFromEnvironment,
+				Proxy:             GetHttpProxy(),
 			},
 		},
 		Transport:     nil,
