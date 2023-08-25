@@ -73,12 +73,13 @@ func NewClient() (client *Client) {
 }
 
 func (c *Client) SetTransport(transport *http.Transport) (client *Client) {
+	transport.Proxy = GetHttpProxy()
 	c.Transport = transport
 	return c
 }
 
 func (c *Client) SetTLSConfig(tlsCfg *tls.Config) (client *Client) {
-	c.Transport = &http.Transport{TLSClientConfig: tlsCfg, DisableKeepAlives: true, Proxy: http.ProxyFromEnvironment}
+	c.Transport = &http.Transport{TLSClientConfig: tlsCfg, DisableKeepAlives: true, Proxy: GetHttpProxy()}
 	return c
 }
 
