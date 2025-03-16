@@ -4,6 +4,8 @@ import (
 	"crypto/tls"
 	"net"
 	"net/http"
+	"net/url"
+	"os"
 	"time"
 )
 
@@ -12,12 +14,24 @@ type Client struct {
 	bodySize   int // body size limit(MB), default is 10MB
 }
 
+func GetHttpProxy() func(*http.Request) (*url.URL, error) {
+	proxyStr := os.Getenv("MY_HTTP_PROXY")
+	var proxy func(*http.Request) (*url.URL, error)
+	if proxyStr != "" {
+		p, err := url.Parse(proxyStr)
+		if err == nil {
+			proxy = http.ProxyURL(p)
+		}
+	}
+	return proxy
+}
+
 func defaultClient() *Client {
 	return &Client{
 		HttpClient: &http.Client{
 			Timeout: 60 * time.Second,
 			Transport: &http.Transport{
-				Proxy: http.ProxyFromEnvironment,
+				Proxy: GetHttpProxy(),
 				DialContext: defaultTransportDialContext(&net.Dialer{
 					Timeout:   30 * time.Second,
 					KeepAlive: 30 * time.Second,
